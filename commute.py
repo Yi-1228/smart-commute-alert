@@ -1,8 +1,12 @@
+import os
 import requests
 
 
 LATITUDE = 24.9937
 LONGITUDE = 121.3010
+
+TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
+CHAT_ID = os.environ["CHAT_ID"]
 
 
 # ===== 天氣 API =====
@@ -75,37 +79,93 @@ def get_aqi():
     return max_aqi
 
 
-# ===== 測試 =====
-max_temperature, max_rain_probability = get_weather()
-
-aqi = get_aqi()
-
-print("最高溫度:", max_temperature, "°C")
-print("最高降雨機率:", max_rain_probability, "%")
-print("AQI:", aqi)
 # ===== 通勤建議 =====
+def create_recommendations(
+    max_temperature,
+    max_rain_probability,
+    aqi
+):
 
-recommendations = []
+    recommendations = []
+
+    if max_rain_probability >= 60:
+        recommendations.append(
+            "☔ 降雨機率達 60%，請攜帶雨傘。"
+        )
+
+    if max_temperature >= 33:
+        recommendations.append(
+            "☀️ 最高溫達 33°C，請做好防曬並補充水分。"
+        )
+
+    if aqi >= 100:
+        recommendations.append(
+            "😷 AQI 達 100，建議配戴口罩。"
+        )
+
+    if not recommendations:
+        recommendations.append(
+            "✅ 天氣與空氣品質狀況正常，適合外出通勤。"
+        )
+
+    return recommendations
 
 
-if max_rain_probability >= 60:
-    recommendations.append("☔ 降雨機率達 60%，請攜帶雨傘。")
+# ===== Telegram =====
+def send_telegram(message):
+
+    url = (
+        f"https://api.telegram.org/"
+        f"bot{TELEGRAM_TOKEN}/sendMessage"
+    )
+
+    payload = {
+        "chat_id": CHAT_ID,
+        "text": message
+    }
+
+    response = requests.post(
+        url,
+        json=payload,
+        timeout=10
+    )
+
+    print("Telegram HTTP Status:", response.status_code)
+
+    response.raise_for_status()
 
 
-if max_temperature >= 33:
-    recommendations.append("☀️ 最高溫達 33°C，請做好防曬並補充水分。")
+# ===== 主程式 =====
+def main():
+
+    max_temperature, max_rain_probability = get_weather()
+
+    aqi = get_aqi()
+
+    recommendations = create_recommendations(
+        max_temperature,
+        max_rain_probability,
+        aqi
+    )
+
+    message = f"""
+🚨 智慧通勤風險通知
+
+📍 地點：桃園
+
+🌡️ 最高溫：{max_temperature:.1f}°C
+🌧️ 最高降雨機率：{max_rain_probability:.0f}%
+🌫️ AQI：{aqi}
+
+📋 通勤建議：
+"""
+
+    message += "\n".join(recommendations)
+
+    print(message)
+
+    send_telegram(message)
 
 
-if aqi >= 100:
-    recommendations.append("😷 AQI 達 100，建議配戴口罩。")
-
-
-if not recommendations:
-    recommendations.append("✅ 天氣與空氣品質狀況正常，適合外出通勤。")
-
-
-print()
-print("===== 通勤建議 =====")
-
-for recommendation in recommendations:
-    print(recommendation)
+if __name__ == "__main__":
+    main()
