@@ -3,8 +3,11 @@ name: Smart Commute Alert
 on:
   workflow_dispatch:
 
+  schedule:
+    - cron: "0 23 * * 0-4"
+
 jobs:
-  test-telegram:
+  commute-alert:
     runs-on: ubuntu-latest
 
     steps:
@@ -20,7 +23,7 @@ jobs:
         run: |
           pip install -r requirements.txt
 
-      - name: Run Python
+      - name: Run Smart Commute Alert
         env:
           TELEGRAM_TOKEN: ${{ secrets.TELEGRAM_TOKEN }}
           CHAT_ID: ${{ secrets.CHAT_ID }}
