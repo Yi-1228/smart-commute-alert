@@ -83,3 +83,29 @@ aqi = get_aqi()
 print("最高溫度:", max_temperature, "°C")
 print("最高降雨機率:", max_rain_probability, "%")
 print("AQI:", aqi)
+# ===== 通勤建議 =====
+
+recommendations = []
+
+
+if max_rain_probability >= 60:
+    recommendations.append("☔ 降雨機率達 60%，請攜帶雨傘。")
+
+
+if max_temperature >= 33:
+    recommendations.append("☀️ 最高溫達 33°C，請做好防曬並補充水分。")
+
+
+if aqi >= 100:
+    recommendations.append("😷 AQI 達 100，建議配戴口罩。")
+
+
+if not recommendations:
+    recommendations.append("✅ 天氣與空氣品質狀況正常，適合外出通勤。")
+
+
+print()
+print("===== 通勤建議 =====")
+
+for recommendation in recommendations:
+    print(recommendation)
