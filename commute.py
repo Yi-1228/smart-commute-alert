@@ -1,37 +1,39 @@
-import os
 import requests
 
 
-TELEGRAM_TOKEN = os.environ["TELEGRAM_TOKEN"]
-CHAT_ID = os.environ["CHAT_ID"]
+LATITUDE = 24.9937
+LONGITUDE = 121.3010
 
 
-def send_telegram(message):
-    url = f"https://api.telegram.org/bot{TELEGRAM_TOKEN}/sendMessage"
+def get_weather():
 
-    payload = {
-        "chat_id": CHAT_ID,
-        "text": message
+    url = "https://api.open-meteo.com/v1/forecast"
+
+    params = {
+        "latitude": LATITUDE,
+        "longitude": LONGITUDE,
+        "daily": "temperature_2m_max,precipitation_probability_max",
+        "timezone": "Asia/Taipei"
     }
 
-    response = requests.post(
-        url,
-        json=payload,
-        timeout=10
-    )
+    response = requests.get(url, params=params, timeout=10)
 
     print("HTTP Status:", response.status_code)
 
     response.raise_for_status()
 
+    data = response.json()
 
-message = """
-🚨 智慧通勤通知測試
+    max_temperature = max(
+        data["daily"]["temperature_2m_max"]
+    )
 
-這是一則 GitHub Actions 測試訊息。
+    max_rain_probability = max(
+        data["daily"]["precipitation_probability_max"]
+    )
 
-如果你看到這則訊息，
-代表 Telegram Bot 設定成功！
-"""
+    print("最高溫度:", max_temperature, "°C")
+    print("最高降雨機率:", max_rain_probability, "%")
 
-send_telegram(message)
+
+get_weather()
